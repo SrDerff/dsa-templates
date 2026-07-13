@@ -1,6 +1,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <functional>
 
 /*
 Uso:
@@ -25,6 +26,18 @@ private:
 
     // Puntero a función hash
     size_t (*hashFunction)(const T&);
+
+    // Puntero a funcion comparadora
+    bool (*equalTo)(const T&a, const T&b);
+
+    // Funcion comparadora por defecto, operador ==
+    static bool defaultEqualTo(const T& a, const T& b) {
+        return a == b;
+    }
+
+    static size_t defaultHash(const T& v) {
+        return std::hash<T>{}(v);
+    }
 
     //obtener indice de un elemento
     size_t getIndex(const T& value) const {
@@ -61,13 +74,15 @@ private:
 
 public:
     //constructor
-    HashTableSet(size_t capacity,
-            size_t (*hash)(const T&),
+    HashTableSet(size_t capacity = 10,
+            size_t (*hash)(const T&) = defaultHash,
+            bool (*equalTo)(const T&, const T&) = defaultEqualTo,
             float loadFactor = 0.75f)
         : table(std::max<size_t>(1,capacity)),
           numElements(0),
           maxLoadFactor(loadFactor),
-          hashFunction(hash) {}
+          hashFunction(hash),
+          equalTo(equalTo) {}
 
     //insertar elemento
     bool insert(const T& value) {
@@ -91,7 +106,7 @@ public:
 
         //busca en la lista si existe el elemento buscado
         for (const auto& x : bucket)
-            if (x == value)
+            if (equalTo(x, value))
                 return true;
 
         return false;
@@ -107,7 +122,7 @@ public:
         //mientras la direccion a la que apunta el puntero sea diferente de end()
         //aumenta la direccion con it++
         for (auto it = bucket.begin(); it != bucket.end(); ++it) {
-            if (*it == value) {
+            if (equalTo(*it, value)) {
                 bucket.erase(it);
                 numElements--;
                 return true;
@@ -136,5 +151,14 @@ public:
     //retorna si la lista esta vacia o no
     bool empty() const {
         return numElements == 0;
+    }
+
+    //mostrar todo
+    void printAll() const {
+        for(size_t pos = 0; pos < table.size(); pos++){
+            std::cout<<"Key: "<<pos<<" | ";
+            for(auto &elem: table[pos]) std::cout<<elem<<", ";
+            std::cout<<std::endl;
+        }
     }
 };

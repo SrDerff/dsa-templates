@@ -7,3 +7,4 @@ bool maxHeapFunction(int a, int b){
 bool minHeapFunction(int a, int b){
     return a < b;
 }
+
